@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: OpenAPI schema for template terraform-kubernetes-postgresql
+components:
+  schemas:
+    variables:
+      type: object
+      properties:
+        infrastructure:
+          title: Infrastructure
+          type: object
+          description: |
+            Specify the infrastructure information for deploying.
+          default: {}
+          properties:
+            domain_suffix:
+              default: cluster.local
+              description: |
+                Specify the domain name of the Kubernetes cluster.
+              title: Domain Suffix
+              type: string
+              x-walrus-ui:
+                order: 3
+            image_registry:
+              default: registry-1.docker.io
+              description: |
+                Specify the image registry to pull the bitnami/postgresql image, default is `registry-1.docker.io`.
+              title: Image Registry
+              type: string
+              x-walrus-ui:
+                order: 2
+            namespace:
+              title: Namespace
+              type: string
+              x-walrus-ui:
+                hidden: true
+                order: 1
+            service_type:
+              default: ClusterIP
+              description: |
+                Specify the service type of the Kubernetes cluster, default is `ClusterIP`.
+              enum:
+              - NodePort
+              - LoadBalancer
+              - ClusterIP
+              title: Service Type
+              type: string
+              x-walrus-ui:
+                order: 4
+          x-walrus-ui:
+            colSpan: 12
+            group: Advanced
+            order: 2
+        architecture:
+          title: Architecture
+          type: string
+          description: |
+            Specify the deployment architecture, select from standalone or replication.
+          default: standalone
+          enum:
+          - standalone
+          - replication
+          x-walrus-ui:
+            group: Basic
+            immutable: true
+            order: 3
+        replication_readonly_replicas:
+          title: Replication Readonly Replicas
+          type: number
+          description: |
+            Specify the number of read-only replicas under the replication deployment.
+          default: 1
+          enum:
+          - 1
+          - 2
+          - 3
+          x-walrus-ui:
+            group: Basic
+            order: 4
+            showIf: architecture=replication
+        engine_version:
+          title: Engine Version
+          type: string
+          description: |
+            Specify the deployment engine version, select from https://hub.docker.com/r/bitnami/postgresql/tags.
+          default: "16.0"
+          x-walrus-ui:
+            group: Basic
+            order: 5
+        database:
+          title: Database
+          type: string
+          description: "Specify the database name. The database name must be 2-64
+            characters long and start with any lower letter, combined with number,
+            or symbols: - _. \nThe database name cannot be PostgreSQL forbidden keyword.\n"
+          default: mydb
+          minLength: 2
+          maxLength: 64
+          x-walrus-ui:
+            group: Basic
+            order: 8
+        username:
+          title: Username
+          type: string
+          description: |
+            Specify the account username. The username must be 2-16 characters long and start with lower letter(expect `pg` prefix), combined with number, or symbol: _.
+            The username cannot be PostgreSQL forbidden keyword and postgres.
+          default: rdsuser
+          minLength: 2
+          maxLength: 16
+          x-walrus-ui:
+            group: Basic
+            order: 6
+        password:
+          title: Password
+          type: string
+          description: |
+            Specify the account password. The password must be 8-32 characters long and start with any letter, number, or symbols: ! # $ % ^ & * ( ) _ + - =.
+            If not specified, it will generate a random password.
+          format: password
+          writeOnly: true
+          minLength: 8
+          maxLength: 32
+          x-walrus-ui:
+            group: Basic
+            order: 7
+        resources:
+          title: Resources
+          type: object
+          description: |
+            Specify the computing resources.
+          default:
+            cpu: 0.25
+            memory: 1024
+          properties:
+            cpu:
+              default: 0.25
+              description: |
+                Specify the cpu resources. Unit is core.
+              minimum: 0.1
+              title: Cpu(Core)
+              type: number
+              x-walrus-ui:
+                order: 1
+            memory:
+              default: 1024
+              description: |
+                Specify the memory resources. Unit is megabyte.
+              minimum: 512
+              title: Memory(MiB)
+              type: number
+              x-walrus-ui:
+                order: 2
+          x-walrus-ui:
+            colSpan: 12
+            group: Basic
+            order: 9
+        storage:
+          title: Storage
+          type: object
+          description: |
+            Specify the storage resources.
+          properties:
+            class:
+              description: |
+                Specify the storage class. If not specified, it will use the default provisioner.
+              title: Class
+              type: string
+              x-walrus-ui:
+                order: 1
+            size:
+              default: 10240
+              description: |
+                Specify the storage size. Unit is megabyte.
+              minimum: 1024
+              title: Size(MiB)
+              type: number
+              x-walrus-ui:
+                order: 2
+          x-walrus-ui:
+            colSpan: 12
+            group: Basic
+            order: 10
+        seeding:
+          title: Seeding
+          type: object
+          description: |
+            Specify the configuration to seed the database at first-time creating.
+            Seeding increases the startup time waiting and also needs
+            proper permission, like root account.
+          default: {}
+          properties:
+            text:
+              description: |
+                Configure database seeding from text.
+              properties:
+                content:
+                  description: |
+                    Specify the SQL statements to seed the database.
+                  title: Content
+                  type: string
+                  x-walrus-ui:
+                    order: 1
+                    widget: TextArea
+              required:
+              - content
+              title: Text
+              type: object
+              x-walrus-ui:
+                colSpan: 12
+                group: Basic
+                order: 2
+                showIf: type=text
+            type:
+              default: none
+              description: |
+                Specify the seeding approach, select from none, url or text.
+              enum:
+              - none
+              - url
+              - text
+              title: Type
+              type: string
+              x-walrus-ui:
+                order: 1
+            url:
+              description: |
+                Configure database seeding from URL.
+              properties:
+                location:
+                  description: |
+                    Specify the URL to download the SQL statements.
+                  title: Location
+                  type: string
+                  x-walrus-ui:
+                    order: 1
+                storage:
+                  description: |
+                    Specify a storage to store the downloaded SQL statements.
+                  properties:
+                    class:
+                      description: |
+                        Specify the storage class. If not specified, it will use the default provisioner.
+                      title: Class
+                      type: string
+                      x-walrus-ui:
+                        order: 1
+                    size:
+                      default: 10240
+                      description: |
+                        Specify the storage size. Unit is megabyte.
+                      minimum: 1024
+                      title: Size(MiB)
+                      type: number
+                      x-walrus-ui:
+                        order: 2
+                  title: Storage
+                  type: object
+                  x-walrus-ui:
+                    colSpan: 12
+                    order: 2
+              required:
+              - location
+              title: Url
+              type: object
+              x-walrus-ui:
+                colSpan: 12
+                order: 2
+                showIf: type=url
+          x-walrus-ui:
+            colSpan: 12
+            group: Basic
+            order: 11
+      x-walrus-ui:
+        groupOrder:
+        - Basic
+        - Advanced
